@@ -1,0 +1,31 @@
+# Ambiente experimental: somente dados fictícios.
+# Subir: docker compose up --build   ->   http://localhost:8000
+services:
+  banco:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: perianest
+      POSTGRES_USER: perianest
+      POSTGRES_PASSWORD: trocar-esta-senha
+    volumes:
+      - dados_banco:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U perianest"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://perianest:trocar-esta-senha@banco:5432/perianest
+      MV_CONECTOR: simulado
+    ports:
+      - "8000:8000"
+    depends_on:
+      banco:
+        condition: service_healthy
+
+volumes:
+  dados_banco:
